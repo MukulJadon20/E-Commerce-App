@@ -2,6 +2,9 @@ import sendEmail from "../config/sendEmail.js";
 import userModel from "../models/user.model.js";
 import bcryptjs from "bcryptjs";
 import verifyEmailTemplet from "../utils/verfiyEmailTemplate.js";
+import generateAccessToken from "../utils/generatedAccessToken.js";
+import generatedRefreshToken from "../utils/generatedRefreshToken.js";
+import uploadImageCloudinary from "../utils/uploadImageCloudinary.js";
 
 export async function registerUserController(request, response) {
   try {
@@ -63,14 +66,15 @@ export async function registerUserController(request, response) {
   }
 }
 
-export async function verifyEmailController(req, res) {
+export async function verifyEmailController(request, response) {
   try {
-    const { code } = req.body;
+    const { code } = request.body;
+
     const user = await userModel.findOne({ _id: code });
 
     if (!user) {
-      return res.status(400).json({
-        message: "invalid code",
+      return response.status(400).json({
+        message: "Invalid code",
         error: true,
         success: false,
       });
@@ -83,29 +87,37 @@ export async function verifyEmailController(req, res) {
       }
     );
 
-    return res.json({
-      message: "verify email done",
+    return response.json({
+      message: "Verify email done",
       success: true,
       error: false,
     });
-  } catch (err) {
-    return res.status(500).json({
-      message: err.message || err,
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
       error: true,
       success: true,
     });
   }
 }
 
-// login controller
-
-export async function loginController(req, res) {
+//login controller
+export async function loginController(request, response) {
   try {
-    const { email, password } = req.body;
+    const { email, password } = request.body;
+
+    if (!email || !password) {
+      return response.status(400).json({
+        message: "provide email, password",
+        error: true,
+        success: false,
+      });
+    }
+
     const user = await userModel.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({
+      return response.status(400).json({
         message: "User not register",
         error: true,
         success: false,
@@ -113,8 +125,8 @@ export async function loginController(req, res) {
     }
 
     if (user.status !== "Active") {
-      return res.status(400).json({
-        message: "Contact to admin",
+      return response.status(400).json({
+        message: "Contact to Admin",
         error: true,
         success: false,
       });
@@ -123,15 +135,102 @@ export async function loginController(req, res) {
     const checkPassword = await bcryptjs.compare(password, user.password);
 
     if (!checkPassword) {
-      return res.status(400).json({
-        message: "Cheack your password",
+      return response.status(400).json({
+        message: "Check your password",
         error: true,
         success: false,
       });
     }
-  } catch (err) {
-    return res.status(500).json({
-      message: err.message || err,
+
+    const accesstoken = await generateAccessToken(user._id);
+    const refreshToken = await generatedRefreshToken(user._id);
+
+    const updateUser = await userModel.findByIdAndUpdate(user?._id, {
+      last_login_date: new Date(),
+    });
+
+    const cookiesOption = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    };
+    response.cookie("accessToken", accesstoken, cookiesOption);
+    response.cookie("refreshToken", refreshToken, cookiesOption);
+
+    return response.json({
+      message: "Login successfully",
+      error: false,
+      success: true,
+      data: {
+        accesstoken,
+        refreshToken,
+      },
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//logout controller
+export async function logoutController(request, response) {
+  try {
+    const userid = request.userId; //middleware
+
+    const cookiesOption = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+    };
+
+    response.clearCookie("accessToken", cookiesOption);
+    response.clearCookie("refreshToken", cookiesOption);
+
+    const removeRefreshToken = await userModel.findByIdAndUpdate(userid, {
+      refresh_token: "",
+    });
+
+    return response.json({
+      message: "Logout successfully",
+      error: false,
+      success: true,
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
+      error: true,
+      success: false,
+    });
+  }
+}
+
+//upload user avatar
+export async function uploadAvatar(request, response) {
+  try {
+    const userId = request.userId; // auth middlware
+    const image = request.file; // multer middleware
+
+    const upload = await uploadImageCloudinary(image);
+
+    const updateUser = await userModel.findByIdAndUpdate(userId, {
+      avatar: upload.url,
+    });
+
+    return response.json({
+      message: "upload profile",
+      success: true,
+      error: false,
+      data: {
+        _id: userId,
+        avatar: upload.url,
+      },
+    });
+  } catch (error) {
+    return response.status(500).json({
+      message: error.message || error,
       error: true,
       success: false,
     });
