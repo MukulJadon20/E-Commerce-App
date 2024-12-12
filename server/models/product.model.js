@@ -18,7 +18,7 @@ const productSchema = new mongoose.Schema(
     subCategory: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: "SubCategory",
+        ref: "subCategory",
       },
     ],
     unit: {

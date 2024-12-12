@@ -27,6 +27,6 @@ userRouter.put("/forgot-password", forgotPasswordController);
 userRouter.put("/verify-forgot-password-otp", verifyForgotPasswordOtp);
 userRouter.put("/reset-password", resetpassword);
 userRouter.post("/refresh-token", refreshToken);
-userRouter.get("/user-details",auth,userDetails );
+userRouter.get("/user-details", auth, userDetails);
 
 export default userRouter;

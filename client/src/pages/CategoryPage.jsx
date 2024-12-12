@@ -43,7 +43,7 @@ const CategoryPage = () => {
                 setCategoryData(responseData.data)
             }
         } catch (error) {
-            
+            AxiosToastError(error)
         }finally{
             setLoading(false)
         }
