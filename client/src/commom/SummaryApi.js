@@ -1,4 +1,4 @@
-export const baseURL = "http://localhost:8080"
+export const baseURL = "https://e-commerce-app-4-u5bg.onrender.com"
 // export const baseURL = import.meta.env.VITE_API_URL
 
 const SummaryApi = {
