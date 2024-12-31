@@ -14,9 +14,7 @@ import productRouter from "./routes/product.route.js";
 import cartRouter from "./routes/cart.route.js";
 import addressRouter from "./routes/address.route.js";
 import orderRouter from "./routes/order.route.js";
-import path from "path";
 
-const _dirname = path.resolve();
 
 const app = express();
 app.use(
@@ -34,7 +32,7 @@ app.use(
   })
 );
 
-const PORT = 8080 || process.env.PORT;
+const PORT = 8000 || process.env.PORT;
 
 // app.get("/",(request,response)=>{
 //     ///server to client
