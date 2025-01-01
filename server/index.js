@@ -20,7 +20,7 @@ const app = express();
 app.use(
   cors({
     credentials: true,
-    origin: process.env.FRONTEND_URL,
+    origin:  'https://e-commerce-app-5-fgxt.onrender.com', // Deployed frontend
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   })
 );
